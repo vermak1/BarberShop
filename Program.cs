@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Threading;
 
 
@@ -11,10 +10,10 @@ namespace Hairdresser
         {
             try
             {
-                BarberShop b = new BarberShop(5);
+                BarberShop b = new BarberShop(10, 5);
                 b.Open();
 
-                Thread[] threads = new Thread[200];
+                Thread[] threads = new Thread[20];
                 for (int i = 0; i < threads.Length; i++)
                 {
                     threads[i] = new Thread((customer) =>
@@ -34,12 +33,8 @@ namespace Hairdresser
                 for (int i = 0; i < threads.Length; i++)
                 {
                     threads[i].Start(new Customer() { Name = i.ToString() });
-                    //Thread.Sleep(100);
+                    Thread.Sleep(200);
                 }
-
-
-
-
             }
             catch (Exception ex)
             {

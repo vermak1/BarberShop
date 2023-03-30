@@ -10,7 +10,7 @@ namespace Hairdresser
             _random = new Random();
         }
 
-        public Boolean Answer => _random.Next(1, 100) % 2 == 0;
+        public Boolean Answer => _random.Next(0, 100) % 2 == 0;
            
         public TimeSpan FarewellTime => TimeSpan.FromSeconds(_random.Next(1,5));
         public String Name { get; set; }

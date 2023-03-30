@@ -6,13 +6,9 @@ namespace Hairdresser
 {
     internal class BarberShopManager
     {
-        private readonly Object _chairSyncRoot;
-
         private readonly WaitingBench _bench;
 
-        private readonly AutoResetEvent _chairEvent;
-
-        private readonly Chair _chair;
+        private readonly Barbers _barbers;
 
         private readonly Thread _processNewCustomersThread;
 
@@ -22,14 +18,18 @@ namespace Hairdresser
 
         private readonly AutoResetEvent _waitingManagerEvent;
 
-        public BarberShopManager(WaitingBench bench, Object syncRoot, AutoResetEvent chairEvent, Chair chair, ConcurrentQueue<Customer> customers, AutoResetEvent waitingmanagerEvent)
+        private readonly AutoResetEvent _newCustomerEvent;
+
+        private readonly AutoResetEvent _customerEvent;
+
+        public BarberShopManager(WaitingBench bench, ConcurrentQueue<Customer> customers, Barbers barbers, AutoResetEvent waitingEvent, AutoResetEvent newCustomerManagerEvent, AutoResetEvent customerEvent)
         {
             _bench = bench;
-            _chairSyncRoot = syncRoot;
-            _chairEvent = chairEvent;
-            _chair = chair;
             _newCustomers = customers;
-            _waitingManagerEvent = waitingmanagerEvent;
+            _barbers = barbers;
+            _waitingManagerEvent = waitingEvent;
+            _newCustomerEvent = newCustomerManagerEvent;
+            _customerEvent = customerEvent;
 
             _processNewCustomersThread = new Thread(() =>
             {
@@ -42,30 +42,36 @@ namespace Hairdresser
             });
         }
 
-        private void AddCustomerToChair(Customer customer)
+        private void AddCustomerToChair(Customer customer, Barber barber)
         {
-            Console.WriteLine("[Manager] Add customer {0} to the chair", customer.Name);
-            _chair.Customer = customer;
-            _chairEvent.Set();
+            Console.WriteLine("[Manager] Add customer {0} to the chair of barber {1}", customer.Name, barber.Number);
+            barber.BarberChair.Customer = customer;
+            barber.ChairEvent.Set();
         }
 
         private void AddCustomerToBench(Customer customer)
         {
             _bench.AddCustomerToBench(customer);
-            Console.WriteLine("[Manager] Add customer {0} to the bench. Current Count: {1}", customer.Name, _bench.Count);
+            Console.WriteLine("[Manager] Add customer {0} to the bench", customer.Name);
         }
 
         private void ProcessNewCustomer()
         {
             Customer customer = null;
-            if (!_newCustomers.TryDequeue(out customer))
-                return;
+            _customerEvent.Set();
+            _newCustomerEvent.WaitOne();
+            lock(_newCustomers)
+            {
+                if (!_newCustomers.TryDequeue(out customer))
+                    return;
+            }
 
             lock (_bench)
             {
-                if (_chair.Customer == null && !_bench.SomeoneOnBench)
+                var barber = _barbers.GetBarberIfReadyForWork();
+                if (barber != null && !_bench.SomeoneOnBench)
                 {
-                    AddCustomerToChair(customer);
+                    AddCustomerToChair(customer, barber);
                     return;
                 }
                 if (_bench.Available)
@@ -87,7 +93,7 @@ namespace Hairdresser
                     ProcessNewCustomer();
                 }
             }
-            catch(Exception ex) 
+            catch(Exception ex)
             {
                 Console.WriteLine("Manager failed within " + nameof(StartProcessNewCustomers));
                 Console.WriteLine(ex.Message);
@@ -113,17 +119,18 @@ namespace Hairdresser
         private void ProcessWaitingCustomer()
         {
             _waitingManagerEvent.WaitOne();
-            Customer customer = null;
-            if (!_bench.TryRemoveCustomerFromBench(out customer))
+            lock (_bench) 
             {
-                return;
+                var barber = _barbers.GetBarberIfReadyForWork();
+                Customer customer = null;
+                if (barber == null)
+                    return;
+                if (!_bench.TryRemoveCustomerFromBench(out customer))
+                {
+                    return;
+                }
+                AddCustomerToChair(customer, barber);
             }
-            
-            lock (_chairSyncRoot)
-            {
-                AddCustomerToChair(customer);
-            }
-
         }
 
         public void Start()

@@ -8,38 +8,38 @@ namespace Hairdresser
     {
         private readonly WaitingBench _waitingBench;
 
-        private readonly HairCutter _hairCutter;
-
-        private readonly Chair _chair;
-
         private readonly BarberShopManager _manager;
-
-        private readonly AutoResetEvent _chairEvent;
 
         private readonly ConcurrentQueue<Customer> _newCustomers;
 
+        private readonly Barbers _barbers;
+
         private readonly AutoResetEvent _waitingManagerEvent;
 
-        private readonly Object _chairSyncRoot = new object();
+        private readonly AutoResetEvent _newCustomersManagerEvent;
 
-        public BarberShop(int capacity)
+        private readonly AutoResetEvent _customerEvent;
+
+        public BarberShop(int capacity, int barbersNumber)
         {
             if (capacity <= 0)
                 throw new ArgumentException(nameof(capacity));
+            if (barbersNumber <= 0)
+                throw new ArgumentException(nameof(barbersNumber));
 
-            _newCustomers = new ConcurrentQueue<Customer>();
-            _chairEvent = new AutoResetEvent(false);
+            _customerEvent = new AutoResetEvent(false);
             _waitingManagerEvent = new AutoResetEvent(false);
+            _newCustomersManagerEvent = new AutoResetEvent(false);
+            _newCustomers = new ConcurrentQueue<Customer>();
             _waitingBench = new WaitingBench(capacity);
-            _chair = new Chair(_chairEvent);
-            _hairCutter = new HairCutter(_chair, _chairSyncRoot, _chairEvent, _waitingManagerEvent);
-            _manager = new BarberShopManager(_waitingBench, _chairSyncRoot, _chairEvent, _chair, _newCustomers, _waitingManagerEvent);
+            _barbers = new Barbers(barbersNumber, _waitingManagerEvent);
+            _manager = new BarberShopManager(_waitingBench, _newCustomers, _barbers, _waitingManagerEvent, _newCustomersManagerEvent, _customerEvent);
         }
 
         public void Open()
         {
             _manager.Start();
-            _hairCutter.Start();
+            _barbers.Start();
         }
 
         public void HandleNewCustomer(Customer customer)
@@ -47,8 +47,12 @@ namespace Hairdresser
             if (customer == null)
                 throw new ArgumentNullException(nameof(customer));
 
+            _customerEvent.WaitOne();
             lock(_newCustomers)
+            {
+                _newCustomersManagerEvent.Set();
                 _newCustomers.Enqueue(customer);
+            }
         }
     }
 }
