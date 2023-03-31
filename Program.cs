@@ -10,31 +10,35 @@ namespace Hairdresser
         {
             try
             {
-                BarberShop b = new BarberShop(10, 5);
-                b.Open();
-
-                Thread[] threads = new Thread[20];
-                for (int i = 0; i < threads.Length; i++)
+                using(BarberShop b = new BarberShop(10, 5))
                 {
-                    threads[i] = new Thread((customer) =>
+                    b.Open();
+                    Thread[] threads = new Thread[200];
+                    for (int i = 0; i < threads.Length; i++)
                     {
-                        try
+                        threads[i] = new Thread((customer) =>
                         {
-                            if (customer is Customer cust)
-                                b.HandleNewCustomer(cust);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Exception within Thread: {0}\nError: {1}", Thread.CurrentThread.ManagedThreadId, ex.Message);
-                        }
-                    });
-                }
+                            try
+                            {
+                                if (customer is Customer cust)
+                                    b.HandleNewCustomer(cust);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Exception within Thread: {0}\nError: {1}", Thread.CurrentThread.ManagedThreadId, ex.Message);
+                            }
+                        });
+                    }
 
-                for (int i = 0; i < threads.Length; i++)
-                {
-                    threads[i].Start(new Customer() { Name = i.ToString() });
-                    Thread.Sleep(200);
+                    for (int i = 0; i < threads.Length; i++)
+                    {
+                        threads[i].Start(new Customer() { Name = i.ToString() });
+                        Thread.Sleep(100);
+                    }
                 }
+                
+
+                
             }
             catch (Exception ex)
             {

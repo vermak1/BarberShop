@@ -13,16 +13,18 @@ namespace Hairdresser
 
         private readonly AutoResetEvent _waitingManagerEvent;
 
-        public Chair BarberChair { get; }
+        private readonly Chair _chair;
 
-        public AutoResetEvent ChairEvent { get; }
+        private readonly AutoResetEvent _chairEvent;
+
+        public Boolean IsBarberFree => _chair.Customer == null;
 
         public Barber(int number, AutoResetEvent waitingManagerEvent)
         {
             Number = number;
-            BarberChair = new Chair();
+            _chair = new Chair();
             _random = new Random();
-            ChairEvent = new AutoResetEvent(false);
+            _chairEvent = new AutoResetEvent(false);
             _waitingManagerEvent = waitingManagerEvent;
             _workingThread = new Thread(() =>
             {
@@ -33,16 +35,16 @@ namespace Hairdresser
         private void StartHairCut()
         {
             TimeSpan timeForHaircut = TimeSpan.FromSeconds(_random.Next(2, 5));
-            Console.WriteLine("Started haircut for customer #{0}, duration {1} seconds, barber #{2}", BarberChair.Customer.Name, timeForHaircut.Seconds, Number);
+            Console.WriteLine("Started haircut for customer #{0}, duration {1} seconds, barber #{2}", _chair.Customer.Name, timeForHaircut.Seconds, Number);
             Thread.Sleep(timeForHaircut);
-            Console.WriteLine("Finished haircut for customer #{0}, barber #{1}", BarberChair.Customer.Name, Number);
+            Console.WriteLine("Finished haircut for customer #{0}, barber #{1}", _chair.Customer.Name, Number);
         }
 
         private void FollowToDoor()
         {
-            TimeSpan farewell = BarberChair.Customer.FarewellTime;
-            Console.WriteLine("Following customer {0} to the door, time: {1} sec, barber #{2}", BarberChair.Customer.Name, farewell.TotalSeconds, Number);
-            BarberChair.Customer = null;
+            TimeSpan farewell = _chair.Customer.FarewellTime;
+            Console.WriteLine("Following customer {0} to the door, time: {1} sec, barber #{2}", _chair.Customer.Name, farewell.TotalSeconds, Number);
+            _chair.Customer = null;
             Thread.Sleep(farewell);
         }
 
@@ -52,7 +54,7 @@ namespace Hairdresser
             {
                 while (true)
                 {
-                    ChairEvent.WaitOne();
+                    _chairEvent.WaitOne();
                     StartHairCut();
                     _waitingManagerEvent.Set();
                     FollowToDoor();
@@ -64,6 +66,13 @@ namespace Hairdresser
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
             }
+        }
+
+        public void AddCustomerToChair(Customer customer)
+        {
+            Console.WriteLine("Add customer {0} to the chair of barber {1}", customer.Name, Number);
+            _chair.Customer = customer;
+            _chairEvent.Set();
         }
 
         public void Start()

@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Hairdresser
 {
-    public class BarberShop
+    public class BarberShop : IDisposable
     {
         private readonly WaitingBench _waitingBench;
 
@@ -53,6 +53,13 @@ namespace Hairdresser
                 _newCustomersManagerEvent.Set();
                 _newCustomers.Enqueue(customer);
             }
+        }
+
+        public void Dispose()
+        {
+            _waitingManagerEvent?.Dispose();
+            _newCustomersManagerEvent?.Dispose();
+            _customerEvent?.Dispose();
         }
     }
 }

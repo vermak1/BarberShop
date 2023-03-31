@@ -42,13 +42,6 @@ namespace Hairdresser
             });
         }
 
-        private void AddCustomerToChair(Customer customer, Barber barber)
-        {
-            Console.WriteLine("[Manager] Add customer {0} to the chair of barber {1}", customer.Name, barber.Number);
-            barber.BarberChair.Customer = customer;
-            barber.ChairEvent.Set();
-        }
-
         private void AddCustomerToBench(Customer customer)
         {
             _bench.AddCustomerToBench(customer);
@@ -71,7 +64,7 @@ namespace Hairdresser
                 var barber = _barbers.GetBarberIfReadyForWork();
                 if (barber != null && !_bench.SomeoneOnBench)
                 {
-                    AddCustomerToChair(customer, barber);
+                    barber.AddCustomerToChair(customer);
                     return;
                 }
                 if (_bench.Available)
@@ -119,17 +112,20 @@ namespace Hairdresser
         private void ProcessWaitingCustomer()
         {
             _waitingManagerEvent.WaitOne();
-            lock (_bench) 
+            lock (_bench)
             {
                 var barber = _barbers.GetBarberIfReadyForWork();
-                Customer customer = null;
-                if (barber == null)
-                    return;
-                if (!_bench.TryRemoveCustomerFromBench(out customer))
+                while(barber != null)
                 {
-                    return;
+                    Customer customer = null;
+                    if (!_bench.TryRemoveCustomerFromBench(out customer))
+                    {
+                        return;
+                    }
+
+                    barber.AddCustomerToChair(customer);
+                    barber = _barbers.GetBarberIfReadyForWork();
                 }
-                AddCustomerToChair(customer, barber);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Hairdresser
@@ -30,12 +31,7 @@ namespace Hairdresser
         {
             lock (_syncRoot)
             {
-                for (int i = 0; i < _barbers.Count; i++)
-                {
-                    if (_barbers[i].BarberChair.Customer == null)
-                        return _barbers[i];
-                }
-                return null;
+                return _barbers.FirstOrDefault(x => x.IsBarberFree);
             }
         }
     }
