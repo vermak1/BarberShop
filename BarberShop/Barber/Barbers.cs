@@ -7,16 +7,20 @@ namespace Hairdresser
 {
     internal class Barbers
     {
+
         private readonly List<Barber> _barbers;
 
         private readonly Object _syncRoot = new Object();
 
-        public Barbers(Int32 count, AutoResetEvent waitingManagerEvent)
+        public Barbers(Int32 count, AutoResetEvent benchProcessorEvent)
         {
+            if (count <= 0)
+                throw new ArgumentException(nameof(count));
+
             _barbers = new List<Barber>(count);
             for(int i = 0; i < count; i++)
             {
-                Barber b = new Barber(i, waitingManagerEvent);
+                Barber b = new Barber(i, benchProcessorEvent);
                 _barbers.Add(b);
             }
         }

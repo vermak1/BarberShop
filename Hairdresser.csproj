@@ -43,15 +43,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Barbers.cs" />
-    <Compile Include="BarberShop.cs" />
-    <Compile Include="BarberShopManager.cs" />
-    <Compile Include="Chair.cs" />
-    <Compile Include="Customer.cs" />
-    <Compile Include="Barber.cs" />
+    <Compile Include="BarberShop\Barber\Barbers.cs" />
+    <Compile Include="BarberShop\BarberShop.cs" />
+    <Compile Include="BarberShop\Collections\AbstractQueue.cs" />
+    <Compile Include="BarberShop\Collections\NewCustomers.cs" />
+    <Compile Include="BarberShop\Collections\WaitingCustomers.cs" />
+    <Compile Include="BarberShop\Manager\BarberShopManager.cs" />
+    <Compile Include="BarberShop\Manager\BenchCustomerProcessor.cs" />
+    <Compile Include="BarberShop\Customer\Customer.cs" />
+    <Compile Include="BarberShop\Barber\Barber.cs" />
+    <Compile Include="BarberShop\Manager\NewCustomerProcessor.cs" />
+    <Compile Include="BarberShop\Manager\StreetCustomerProcessor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WaitingBench.cs" />
+    <Compile Include="BarberShop\Collections\StreetQueue.cs" />
+    <Compile Include="BarberShop\Collections\WaitingBench.cs" />
+    <Compile Include="BarberShop\Manager\WaitingCustomerProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

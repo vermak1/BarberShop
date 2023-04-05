@@ -5,6 +5,11 @@ namespace Hairdresser
 {
     public class Barber
     {
+        private class Chair
+        {
+            public Customer Customer { get; set; }
+        }
+
         public Int32 Number { get; }
 
         private readonly Random _random;
@@ -45,6 +50,7 @@ namespace Hairdresser
             TimeSpan farewell = _chair.Customer.FarewellTime;
             Console.WriteLine("Following customer {0} to the door, time: {1} sec, barber #{2}", _chair.Customer.Name, farewell.TotalSeconds, Number);
             _chair.Customer = null;
+            _waitingManagerEvent.Set();
             Thread.Sleep(farewell);
         }
 
@@ -56,7 +62,6 @@ namespace Hairdresser
                 {
                     _chairEvent.WaitOne();
                     StartHairCut();
-                    _waitingManagerEvent.Set();
                     FollowToDoor();
                 }
             }
