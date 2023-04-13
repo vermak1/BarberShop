@@ -23,11 +23,15 @@ namespace Hairdresser
 
         private readonly AutoResetEvent _waitingProcessorEvent;
 
+        private readonly AutoResetEvent _benchProcessorEvent;
+
         private readonly Thread _processNewCustomersThread;
 
-        private readonly TimeSpan _timeToWaitForCustomer = TimeSpan.FromSeconds(1);
+        private readonly TimeSpan _timeToWaitForCustomer = TimeSpan.FromSeconds(15);
 
-        public NewCustomerProcessor(NewCustomers newCustomers, AutoResetEvent newCustomerProcessorEvent, AutoResetEvent customerEvent, Barbers barbers, WaitingBench bench, WaitingCustomers waitingCustomers, AutoResetEvent waitingCustomerProcessorEvent, StreetQueue streetQueue)
+        public NewCustomerProcessor(NewCustomers newCustomers, AutoResetEvent newCustomerProcessorEvent, AutoResetEvent customerEvent, Barbers barbers, 
+                                    WaitingBench bench, WaitingCustomers waitingCustomers, AutoResetEvent waitingCustomerProcessorEvent, StreetQueue streetQueue, 
+                                    AutoResetEvent benchProcessorEvent)
         {
             _newCustomers = newCustomers;
             _newCustomerProcessorEvent = newCustomerProcessorEvent;
@@ -37,6 +41,7 @@ namespace Hairdresser
             _waitingCustomers = waitingCustomers;
             _waitingProcessorEvent = waitingCustomerProcessorEvent;
             _streetQueue = streetQueue;
+            _benchProcessorEvent = benchProcessorEvent;
 
             _processNewCustomersThread = new Thread(() =>
             {
@@ -100,6 +105,7 @@ namespace Hairdresser
 
         private void AddCustomerToBench(Customer customer)
         {
+            _benchProcessorEvent.Set();
             _bench.Enqueue(customer);
             Console.WriteLine("[{0}] Add customer {1} to the Bench", PROCESSOR_NAME, customer.Name);
         }

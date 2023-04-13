@@ -12,15 +12,17 @@ namespace Hairdresser
 
         private readonly StreetCustomerProcessor _streetCustomerProcessor;
 
-        public BarberShopManager(WaitingBench bench, NewCustomers newCustomers, Barbers barbers, AutoResetEvent benchProcessorEvent, AutoResetEvent newCustomerProcessorEvent, AutoResetEvent customerEvent, AutoResetEvent waitingCustomerProcessorEvent, AutoResetEvent streetCustomerProcessorEvent)
+        public BarberShopManager(WaitingBench bench, NewCustomers newCustomers, Barbers barbers, AutoResetEvent benchProcessorEvent,
+                                AutoResetEvent newCustomerProcessorEvent, AutoResetEvent customerEvent, AutoResetEvent waitingCustomerProcessorEvent, 
+                                AutoResetEvent streetCustomerProcessorEvent)
         {
             WaitingCustomers waitingCustomers = new WaitingCustomers();
             StreetQueue streetQueue = new StreetQueue();
 
-            _newCustomerProcessor = new NewCustomerProcessor(newCustomers, newCustomerProcessorEvent, customerEvent, barbers, bench, waitingCustomers, waitingCustomerProcessorEvent, streetQueue);
+            _newCustomerProcessor = new NewCustomerProcessor(newCustomers, newCustomerProcessorEvent, customerEvent, barbers, bench, waitingCustomers, waitingCustomerProcessorEvent, streetQueue, benchProcessorEvent);
             _benchCustomerProcessor = new BenchCustomerProcessor(benchProcessorEvent, bench, barbers);
-            _waitingCustomerProcessor = new WaitingCustomerProcessor(streetQueue, waitingCustomers, bench, waitingCustomerProcessorEvent, streetCustomerProcessorEvent);
-            _streetCustomerProcessor = new StreetCustomerProcessor(streetQueue, bench, streetCustomerProcessorEvent);
+            _waitingCustomerProcessor = new WaitingCustomerProcessor(streetQueue, waitingCustomers, bench, waitingCustomerProcessorEvent, streetCustomerProcessorEvent, benchProcessorEvent);
+            _streetCustomerProcessor = new StreetCustomerProcessor(streetQueue, bench, streetCustomerProcessorEvent, benchProcessorEvent);
         }
 
         public void Start()

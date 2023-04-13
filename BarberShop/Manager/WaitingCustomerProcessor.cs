@@ -17,16 +17,19 @@ namespace Hairdresser
 
         private readonly AutoResetEvent _streetCustomerProcessorEvent;
 
+        private readonly AutoResetEvent _benchProcessorEvent;
+
         private readonly Thread _waitingCustomerThread;
 
-        public WaitingCustomerProcessor(StreetQueue streetQueue, WaitingCustomers waitingCustomers, WaitingBench bench, AutoResetEvent waitingCustomerProcessorEvent, AutoResetEvent streetCustomerProcessorEvent)
+        public WaitingCustomerProcessor(StreetQueue streetQueue, WaitingCustomers waitingCustomers, WaitingBench bench, 
+                                        AutoResetEvent waitingCustomerProcessorEvent, AutoResetEvent streetCustomerProcessorEvent, AutoResetEvent benchProcessorEvent)
         {
             _waitingCustomers = waitingCustomers;
             _streetQueue = streetQueue;
             _bench = bench;
             _waitingCustomerProcessorEvent = waitingCustomerProcessorEvent;
             _streetCustomerProcessorEvent= streetCustomerProcessorEvent;
-
+            _benchProcessorEvent = benchProcessorEvent;
             _waitingCustomerThread = new Thread(() =>
             {
                 try
@@ -71,7 +74,7 @@ namespace Hairdresser
                 {
                     if (_bench.Available && !_streetQueue.SomeoneOnStreet)
                     {
-                        Console.WriteLine("[{0}] Customer {1} added to bench since street and bench are empty", PROCESSOR_NAME, customer.Name);
+                        Console.WriteLine("[{0}] Customer {1} added to bench since street are empty and bench is available", PROCESSOR_NAME, customer.Name);
                         AddCustomerToBench(customer);
                         _waitingCustomers.TryDequeue(out _);
                         continue;
@@ -91,6 +94,7 @@ namespace Hairdresser
 
         private void AddCustomerToBench(Customer customer)
         {
+            _benchProcessorEvent.Set();
             _bench.Enqueue(customer);
             Console.WriteLine("[{0}] Add customer {1} to the Bench", PROCESSOR_NAME, customer.Name);
         }

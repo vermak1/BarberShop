@@ -16,7 +16,7 @@ namespace Hairdresser
 
         private readonly Thread _workingThread;
 
-        private readonly AutoResetEvent _waitingManagerEvent;
+        private readonly AutoResetEvent _benchProcessorEvent;
 
         private readonly Chair _chair;
 
@@ -30,7 +30,7 @@ namespace Hairdresser
             _chair = new Chair();
             _random = new Random();
             _chairEvent = new AutoResetEvent(false);
-            _waitingManagerEvent = waitingManagerEvent;
+            _benchProcessorEvent = waitingManagerEvent;
             _workingThread = new Thread(() =>
             {
                 StartWaitForHaircut();
@@ -50,7 +50,7 @@ namespace Hairdresser
             TimeSpan farewell = _chair.Customer.FarewellTime;
             Console.WriteLine("Following customer {0} to the door, time: {1} sec, barber #{2}", _chair.Customer.Name, farewell.TotalSeconds, Number);
             _chair.Customer = null;
-            _waitingManagerEvent.Set();
+            _benchProcessorEvent.Set();
             Thread.Sleep(farewell);
         }
 
