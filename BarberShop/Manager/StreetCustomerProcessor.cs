@@ -61,10 +61,13 @@ namespace Hairdresser
 
             lock (_bench)
             {
-                if (_bench.Available)
+                lock (_streetQueue)
                 {
-                    AddCustomerToBench(customer);
-                    _streetQueue.TryDequeue(out _);
+                    if (_bench.Available)
+                    {
+                        AddCustomerToBench(customer);
+                        _streetQueue.TryDequeue(out _);
+                    }
                 }
             }
         }

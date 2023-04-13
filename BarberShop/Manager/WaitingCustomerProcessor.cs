@@ -72,12 +72,15 @@ namespace Hairdresser
 
                 lock (_bench)
                 {
-                    if (_bench.Available && !_streetQueue.SomeoneOnStreet)
+                    lock (_streetQueue)
                     {
-                        Console.WriteLine("[{0}] Customer {1} added to bench since street are empty and bench is available", PROCESSOR_NAME, customer.Name);
-                        AddCustomerToBench(customer);
-                        _waitingCustomers.TryDequeue(out _);
-                        continue;
+                        if (_bench.Available && !_streetQueue.SomeoneOnStreet)
+                        {
+                            Console.WriteLine("[{0}] Customer {1} added to bench since street is empty and bench is available", PROCESSOR_NAME, customer.Name);
+                            AddCustomerToBench(customer);
+                            _waitingCustomers.TryDequeue(out _);
+                            continue;
+                        }
                     }
                 }
 
@@ -87,7 +90,8 @@ namespace Hairdresser
                     _waitingCustomers.TryDequeue(out _);
                     continue;
                 }
-                AddCustomerToStreet(customer);
+                lock (_streetQueue)
+                    AddCustomerToStreet(customer);
                 _waitingCustomers.TryDequeue(out _);
             }
         }

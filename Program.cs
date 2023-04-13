@@ -10,9 +10,9 @@ namespace Hairdresser
         {
             try
             {
-                using(BarberShop b = new BarberShop(10, 5))
+                using(BarberShop b = new BarberShop(5, 5))
                 {
-                    Thread[] threads = new Thread[200];
+                    Thread[] threads = new Thread[50];
                     for (int i = 0; i < threads.Length; i++)
                     {
                         threads[i] = new Thread((customer) =>

@@ -27,7 +27,7 @@ namespace Hairdresser
 
         private readonly Thread _processNewCustomersThread;
 
-        private readonly TimeSpan _timeToWaitForCustomer = TimeSpan.FromSeconds(15);
+        private readonly TimeSpan _timeToWaitForCustomer = TimeSpan.FromSeconds(1);
 
         public NewCustomerProcessor(NewCustomers newCustomers, AutoResetEvent newCustomerProcessorEvent, AutoResetEvent customerEvent, Barbers barbers, 
                                     WaitingBench bench, WaitingCustomers waitingCustomers, AutoResetEvent waitingCustomerProcessorEvent, StreetQueue streetQueue, 
@@ -77,10 +77,19 @@ namespace Hairdresser
             _newCustomerProcessorEvent.WaitOne();
             _newCustomers.TryDequeue(out customer);
 
-            if (_streetQueue.SomeoneOnStreet || _waitingCustomers.SomeoneInWaitingQueue)
+            if (_waitingCustomers.SomeoneInWaitingQueue)
             {
                 AddCustomerToWaitingQueue(customer);
                 return;
+            }
+
+            lock (_streetQueue)
+            {
+                if (_streetQueue.SomeoneOnStreet)
+                {
+                    AddCustomerToWaitingQueue(customer);
+                    return;
+                }
             }
 
             var barber = _barbers.GetBarberIfReadyForWork();
