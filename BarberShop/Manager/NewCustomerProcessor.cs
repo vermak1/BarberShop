@@ -75,9 +75,7 @@ namespace Hairdresser
             Customer customer;
             _customerEvent.Set();
             _newCustomerProcessorEvent.WaitOne();
-            if (!_newCustomers.TryDequeue(out customer))
-                return;
-            
+            _newCustomers.TryDequeue(out customer);
 
             if (_streetQueue.SomeoneOnStreet || _waitingCustomers.SomeoneInWaitingQueue)
             {
